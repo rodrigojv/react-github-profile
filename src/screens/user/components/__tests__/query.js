@@ -1,5 +1,5 @@
 import React from 'react'
-import {render as rtlRender, wait} from 'react-testing-library'
+import {render as rtlRender, wait, flushEffects} from 'react-testing-library'
 import * as GitHubClient from '../../../../github-client'
 import Query from '../query'
 
@@ -45,6 +45,7 @@ function renderQuery({
 
 test('query makes requests to the client on mount', async () => {
   const {children, client, variables, query} = renderQuery()
+  flushEffects()
   expect(children).toHaveBeenCalledTimes(2)
   expect(children).toHaveBeenCalledWith({
     data: null,
