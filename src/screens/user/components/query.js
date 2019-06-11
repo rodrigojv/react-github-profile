@@ -11,6 +11,16 @@ const Query = ({query, variables, normalize = data => data, children}) => {
   )
   const client = useContext(GitHub.Context)
 
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  const safeSetState = (...args) => mountedRef.current && setState(...args)
+
   useEffect(() => {
     if (isEqual(previousInputs.current, [query, variables])) {
       return
@@ -19,7 +29,7 @@ const Query = ({query, variables, normalize = data => data, children}) => {
     client
       .request(query, variables)
       .then(res =>
-        setState({
+        safeSetState({
           data: normalize(res),
           error: null,
           loaded: true,
@@ -27,7 +37,7 @@ const Query = ({query, variables, normalize = data => data, children}) => {
         }),
       )
       .catch(error =>
-        setState({
+        safeSetState({
           error,
           data: null,
           loaded: false,
