@@ -3,14 +3,16 @@ import PropTypes from 'prop-types'
 import isEqual from 'lodash/isEqual'
 import * as GitHub from '../../../github-client'
 
-const Query = ({query, variables, normalize = data => data, children}) => {
-  const initialState = {loaded: false, fetching: false, data: null, error: null}
+function useSetState(initialState) {
   const [state, setState] = useReducer(
     (oldState, newState) => ({...oldState, ...newState}),
     initialState,
   )
-  const client = useContext(GitHub.Context)
+  return [state, setState]
+}
 
+function useSafeSetState(initialState) {
+  const [state, setState] = useSetState(initialState)
   const mountedRef = useRef(false)
   useEffect(() => {
     mountedRef.current = true
@@ -21,11 +23,19 @@ const Query = ({query, variables, normalize = data => data, children}) => {
 
   const safeSetState = (...args) => mountedRef.current && setState(...args)
 
+  return [state, safeSetState]
+}
+
+const Query = ({query, variables, normalize = data => data, children}) => {
+  const initialState = {loaded: false, fetching: false, data: null, error: null}
+  const [state, safeSetState] = useSafeSetState(initialState)
+  const client = useContext(GitHub.Context)
+
   useEffect(() => {
     if (isEqual(previousInputs.current, [query, variables])) {
       return
     }
-    setState({fetching: true})
+    safeSetState({fetching: true})
     client
       .request(query, variables)
       .then(res =>
