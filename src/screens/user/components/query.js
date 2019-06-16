@@ -34,7 +34,7 @@ function usePrevious(values) {
   return previousInputs.current
 }
 
-const Query = ({query, variables, normalize = data => data, children}) => {
+export const useQuery = ({query, variables, normalize = data => data}) => {
   const initialState = {loaded: false, fetching: false, data: null, error: null}
   const [state, safeSetState] = useSafeSetState(initialState)
   const client = useContext(GitHub.Context)
@@ -65,8 +65,11 @@ const Query = ({query, variables, normalize = data => data, children}) => {
   })
 
   const previousInputs = usePrevious([query, variables])
+  return state
+}
 
-  return children(state)
+const Query = ({children, ...props}) => {
+  return children(useQuery(props))
 }
 
 Query.propTypes = {
